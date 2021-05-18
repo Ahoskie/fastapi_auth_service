@@ -1,0 +1,17 @@
+gunicorn~=20.1.0
+uvicorn~=0.13.4
+fastapi~=0.65.1
+email-validator~=1.1.2
+uvloop~=0.15.2
+httptools~=0.2.0
+pytest~=6.2.4
+requests~=2.25.1
+pytest-asyncio~=0.15.1
+httpx~=0.18.1
+psycopg2~=2.8.6
+bcrypt~=3.2.0
+alembic~=1.6.2
+python-dotenv~=0.17.1
+
+sqlalchemy~=1.4.15
+SQLAlchemy-Utils~=0.37.3

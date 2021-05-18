@@ -1,0 +1,28 @@
+version: '3.7'
+
+volumes:
+  db-data: {}
+
+services:
+  db:
+    build:
+      context: ./backend
+      dockerfile: ./compose/postgres/Dockerfile
+    env_file:
+      - .envs
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: ./backend
+      dockerfile: ./compose/fastapi/Dockerfile
+    env_file:
+      - .envs
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+    command: ./compose/fastapi/entrypoint.sh

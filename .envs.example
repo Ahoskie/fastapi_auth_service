@@ -1,0 +1,12 @@
+# FastAPI
+# -------------------------------------------------
+DEBUG=True
+POSTGRES_IP=192.168.20.84:5432
+
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_DB=auth_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres_local_Pa$$w0rd
+POSTGRES_SERVICE=db
+POSTGRES_PORT=5432
