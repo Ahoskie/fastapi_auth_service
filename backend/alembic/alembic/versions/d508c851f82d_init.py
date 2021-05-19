@@ -24,13 +24,19 @@ def upgrade():
         'role',
         sa.Column('id', sa.Integer, primary_key=True, index=True),
         sa.Column('name', sa.String(64)),
-        relationship('Group', secondary=association_table, backref='roles'),
+        relationship('Group', secondary=association_table, backref='roles', lazy='joined'),
     )
 
     op.create_table(
         'group',
         sa.Column('id', sa.Integer, primary_key=True, index=True),
         sa.Column('name', sa.String(64)),
+    )
+
+    op.create_table(
+        association_table,
+        sa.Column('role_id', sa.Integer, sa.ForeignKey('role.id')),
+        sa.Column('group_id', sa.Integer, sa.ForeignKey('group.id'))
     )
 
     op.create_table(
@@ -56,7 +62,8 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table('user')
-    op.drop_table('settings')
-    op.drop_table('role')
+    op.drop_table(association_table)
     op.drop_table('group')
+    op.drop_table('settings')
+    op.drop_table('user')
+    op.drop_table('role')

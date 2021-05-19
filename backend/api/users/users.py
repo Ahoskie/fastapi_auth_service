@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from schemas.user import UserGet, UserCreate
 from services.users import get_user, get_all_users, create_user
 from database import get_db
+from database.exceptions import DatabaseException
 
 
 router = APIRouter(
@@ -29,12 +30,11 @@ def read_user_by_id(user_id: str, db: Session = Depends(get_db)):
 
 @router.post('/', response_model=UserGet)
 def post_user(user: UserCreate, db: Session = Depends(get_db)):
-    return create_user(db, user)
-    # try:
-    #     brand = await create_brand(brand)
-    # except DocumentAlreadyExists as e:
-    #     raise HTTPException(status_code=400, detail=e.message)
-    # return brand
+    try:
+        created_user = create_user(db, user)
+    except DatabaseException as error:
+        raise HTTPException(status_code=404, detail=error.message)
+    return created_user
 #
 #
 # @router.patch('/{brand_id}/', response_model=BrandDB)

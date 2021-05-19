@@ -14,7 +14,7 @@ class Role(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(64))
-    groups = relationship('Group', secondary=association_table, backref='roles')
+    groups = relationship('Group', secondary=association_table, backref='roles', lazy='joined')
 
 
 class Group(Base):

@@ -1,12 +1,15 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 import bcrypt
 
 from schemas import user as user_schemas
-from models import user as models_user
+from models.user import User
+from models.permissions import Role
+from database.exceptions import DatabaseException
 
 
 def get_all_users(db: Session, limit: int = 100, offset: int = 0):
-    users = db.query(models_user.User).offset(offset).limit(limit).all()
+    users = db.query(User).offset(offset).limit(limit).all()
     return users
 
 
@@ -16,10 +19,16 @@ def create_user(db: Session, user: user_schemas.UserCreate):
         user.first_name = ''
         user.last_name = ''
     user.password = hashed_password
-    db_user = models_user.User(user.dict())
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    db_role = db.query(Role).get(user.role_id)
+    if not db_role:
+        raise DatabaseException(f'Role with id {user.role_id} does not exist')
+    try:
+        db_user = User(**user.dict())
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+    except IntegrityError as error:
+        raise DatabaseException(error.args)
     return db_user
 
 
