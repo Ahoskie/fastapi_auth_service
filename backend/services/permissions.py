@@ -3,14 +3,14 @@ from sqlalchemy.exc import IntegrityError
 
 from schemas.permissions import RoleBase, GroupBase
 from models.permissions import Role, Group
-from database.exceptions import DatabaseException
+from database.exceptions import DatabaseException, NotFoundException
 from services import get_all, get_by_id, update_instance, delete_instance
 
 
 def validate_role(db: Session, role: RoleBase):
     db_groups = db.query(Group).filter(Group.id.in_(role.groups)).all()
     if len(db_groups) < len(role.groups):
-        raise DatabaseException(f'Can not find groups with ids '
+        raise NotFoundException(f'Can not find groups with ids '
                                 f'"{set(role.groups) - set([group.id for group in db_groups])}" in database')
     role.groups = db_groups
     return role
@@ -42,7 +42,7 @@ def create_role(db: Session, role: RoleBase):
 def update_role(db: Session, role_id: int, role: RoleBase):
     db_role = db.query(Role).get(role_id)
     if not db_role:
-        raise DatabaseException(f'Role with id {role_id} does not exist')
+        raise NotFoundException(f'Role with id {role_id} does not exist')
     validated_model = validate_role(db, role)
     try:
         update_instance(db_role, validated_model)
@@ -83,7 +83,7 @@ def create_group(db: Session, group: GroupBase):
 def update_group(db: Session, group_id: int, group: GroupBase):
     db_group = db.query(Group).get(group_id)
     if not db_group:
-        raise DatabaseException(f'Group with id {group_id} does not exist')
+        raise NotFoundException(f'Group with id {group_id} does not exist')
     try:
         update_instance(db_group, group)
         db.add(db_group)

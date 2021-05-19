@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from api.users.users import router as users_router
-from api.permissions.permissions import router as permissions_router
+from api.users import router as users_router
+from api.permissions import router as permissions_router
 
 
 api_router = APIRouter(

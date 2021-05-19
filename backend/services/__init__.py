@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from database.exceptions import DatabaseException
+from database.exceptions import DatabaseException, NotFoundException
 
 
 def get_all(db: Session, model, limit: int = 100, offset: int = 0):
@@ -12,7 +12,7 @@ def get_all(db: Session, model, limit: int = 100, offset: int = 0):
 def get_by_id(db: Session, instance_id: int, model):
     instance = db.query(model).get(instance_id)
     if not instance:
-        raise DatabaseException(f'Can not find entity with {instance_id} id')
+        raise NotFoundException(f'Can not find entity with {instance_id} id')
     return instance
 
 
@@ -25,6 +25,12 @@ def update_instance(instance, model: BaseModel):
 def delete_instance(db: Session, instance_id: int, model):
     instance = db.query(model).get(instance_id)
     if not instance:
-        raise DatabaseException(f'Can not find entity with {instance_id} id')
+        raise NotFoundException(f'Can not find entity with {instance_id} id')
     db.delete(instance)
     db.commit()
+
+
+def check_uniqueness(db: Session, model, field, value):
+    instance = db.query(model).filter(getattr(model, field) == value).first()
+    if instance:
+        raise DatabaseException(f'Entity with `{field}` = `{value}` already exists')

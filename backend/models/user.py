@@ -28,4 +28,4 @@ class Settings(Base):
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship('User', backref=backref('settings', uselist=False))
 
-    photo = Column(URLType)
+    # photo = Column(URLType)

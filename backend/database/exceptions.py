@@ -9,3 +9,9 @@ class DatabaseException(Exception):
     @staticmethod
     def get_message(payload):
         return f'Database operation error occurred. Payload: {payload}.'
+
+
+class NotFoundException(DatabaseException):
+    @staticmethod
+    def get_message(payload):
+        return f'Not found. Payload: {payload}.'
