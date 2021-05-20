@@ -1,6 +1,7 @@
 # FastAPI
 # -------------------------------------------------
 DEBUG=True
+SECRET_KEY=my_local_key
 POSTGRES_IP=192.168.20.84:5432
 
 # PostgreSQL
