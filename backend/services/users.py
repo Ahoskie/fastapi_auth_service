@@ -5,11 +5,11 @@ import bcrypt
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from schemas.user import UserCreate, UserGet, UserObtainToken, TokenPass
+from schemas.user import UserCreate, UserGet, UserObtainToken, TokenPass, UserUpdate
 from models.user import User
 from models.permissions import Role
 from database.exceptions import DatabaseException, NotFoundException
-from services import check_uniqueness, delete_instance
+from services import check_uniqueness, delete_instance, update_instance
 from services.exceptions import JWTException
 from core.config import SECRET_KEY, SUPERUSER_ROLE_NAME
 
@@ -46,6 +46,24 @@ def create_user(db: Session, user: UserCreate):
 
 def delete_user(db: Session, user_id: int):
     delete_instance(db, user_id, User)
+
+
+def update_user(db: Session, user_id: int, user: UserUpdate):
+    if user.first_name == '' or user.last_name == '':
+        user.first_name = ''
+        user.last_name = ''
+    validate_user(db, user)
+    try:
+        db_user = db.query(User).get(user_id)
+        if not db_user:
+            raise NotFoundException(f'User with id {user_id} does not exist')
+        update_instance(db_user, user)
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+    except IntegrityError as error:
+        raise DatabaseException(error.args)
+    return db_user.__dict__
 
 
 def create_new_tokens(user):

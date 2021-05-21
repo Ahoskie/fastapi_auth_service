@@ -2,8 +2,9 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Response, Depends
 from sqlalchemy.orm import Session
 
-from schemas.user import UserGet, UserCreate, UserObtainToken, TokensGet, TokenPass
-from services.users import get_all_users, create_user, delete_user, obtain_token, verify_token, refresh_access_token
+from schemas.user import UserGet, UserCreate, UserObtainToken, TokensGet, TokenPass, UserUpdate
+from services.users import (get_all_users, create_user, delete_user, obtain_token, verify_token, refresh_access_token,
+                            update_user)
 from database import get_db
 
 
@@ -28,6 +29,11 @@ def post_user(user: UserCreate, db: Session = Depends(get_db)):
 def delete_user_by_id(user_id: int, db: Session = Depends(get_db)):
     delete_user(db, user_id)
     return Response(status_code=204)
+
+
+@router.patch('/{user_id}/', response_model=UserGet)
+def patch_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
+    return update_user(db, user_id, user)
 
 
 @router.post('/obtain-token/', response_model=TokensGet)

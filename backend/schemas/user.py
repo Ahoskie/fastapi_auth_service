@@ -15,6 +15,13 @@ class UserCreate(UserBase):
     password: str
 
 
+class UserUpdate(UserBase):
+	name: Optional[str]
+	email: Optional[EmailStr]
+	role_id: Optional[int]
+	is_active: Optional[bool]
+
+
 class UserGet(UserBase):
     id: int
     is_active: bool
