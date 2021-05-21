@@ -2,8 +2,8 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Response, Depends
 from sqlalchemy.orm import Session
 
-from schemas.user import UserGet, UserCreate, UserObtainToken, AuthenticationToken
-from services.users import get_all_users, create_user, delete_user, obtain_token, verify_token
+from schemas.user import UserGet, UserCreate, UserObtainToken, TokensGet, TokenPass
+from services.users import get_all_users, create_user, delete_user, obtain_token, verify_token, refresh_access_token
 from database import get_db
 
 
@@ -30,14 +30,19 @@ def delete_user_by_id(user_id: int, db: Session = Depends(get_db)):
     return Response(status_code=204)
 
 
-@router.post('/obtain-token/')
+@router.post('/obtain-token/', response_model=TokensGet)
 def obtain_token_by_user_id(user: UserObtainToken, db: Session = Depends(get_db)):
-    access_token = obtain_token(db, user)
-    response_data = AuthenticationToken(access_token=access_token)
+    tokens = obtain_token(db, user)
+    response_data = TokensGet(**tokens)
     return response_data
 
 
 @router.post('/verify-token/')
-def post_verify_token(token: AuthenticationToken, db: Session = Depends(get_db)):
+def post_verify_token(token: TokenPass, db: Session = Depends(get_db)):
     verify_token(db, token)
     return Response(status_code=200)
+
+
+@router.post('/refresh-token/', response_model=TokensGet)
+def post_refresh_token(token: TokenPass, db: Session = Depends(get_db)):
+    return TokensGet(**refresh_access_token(db, token))

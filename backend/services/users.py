@@ -5,13 +5,13 @@ import bcrypt
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from schemas.user import UserCreate, UserGet, UserObtainToken, AuthenticationToken
+from schemas.user import UserCreate, UserGet, UserObtainToken, TokenPass
 from models.user import User
 from models.permissions import Role
 from database.exceptions import DatabaseException, NotFoundException
 from services import check_uniqueness, delete_instance
 from services.exceptions import JWTException
-from core.config import SECRET_KEY
+from core.config import SECRET_KEY, SUPERUSER_ROLE_NAME
 
 
 def validate_user(db: Session, user):
@@ -48,16 +48,26 @@ def delete_user(db: Session, user_id: int):
     delete_instance(db, user_id, User)
 
 
-def create_new_token(user):
-    exp_time = datetime.datetime.today() + datetime.timedelta(days=1)
+def create_new_tokens(user):
+    access_exp_time = datetime.datetime.today() + datetime.timedelta(days=1)
+    refresh_exp_time = datetime.datetime.today() + datetime.timedelta(days=30)
     decoded_user = {
         'name': user.name,
         'email': user.email,
+        'role_id': user.role_id,
+        'role_name': user.role.name,
         'sub': user.id,
-        'exp': datetime.datetime.fromisoformat(exp_time.isoformat()).timestamp()
+        'typ': 'access',
+        'exp': datetime.datetime.fromisoformat(access_exp_time.isoformat()).timestamp()
     }
-    token = jwt.encode(decoded_user, SECRET_KEY, algorithm='HS256')
-    return token
+    decoded_refresh = {
+        'typ': 'refresh',
+        'sub': user.id,
+        'exp': datetime.datetime.fromisoformat(refresh_exp_time.isoformat()).timestamp()
+    }
+    refresh_token = jwt.encode(decoded_refresh, SECRET_KEY, algorithm='HS256')
+    access_token = jwt.encode(decoded_user, SECRET_KEY, algorithm='HS256')
+    return access_token, refresh_token
 
 
 def obtain_token(db: Session, user: UserObtainToken):
@@ -67,13 +77,36 @@ def obtain_token(db: Session, user: UserObtainToken):
     password_is_valid = bcrypt.checkpw(user.password.encode(), db_user.password.encode())
     if not password_is_valid:
         raise DatabaseException('User email and password do not match')
-    return create_new_token(db_user)
+    access, refresh = create_new_tokens(db_user)
+    return {'access_token': access, 'refresh_token': refresh}
 
 
-def verify_token(db: Session, token: AuthenticationToken):
-    access_token = token.access_token
+def refresh_access_token(db: Session, token: TokenPass):
+    token = token.token
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms='HS256')
+        if 'typ' not in payload or payload['typ'] != 'refresh':
+            raise JWTException('Token type is not valid')
+    except jwt.exceptions.DecodeError or jwt.exceptions.InvalidSignatureError:
+        raise JWTException('Bad token format')
+    except jwt.exceptions.ExpiredSignatureError:
+        raise JWTException('The token is expired')
+
+    user = db.query(User).get(payload['sub'])
+    access, refresh = create_new_tokens(user)
+    return {'access_token': access, 'refresh_token': refresh}
+
+
+def verify_token(db: Session, token: TokenPass):
+    access_token = token.token
     try:
         payload = jwt.decode(access_token, SECRET_KEY, algorithms='HS256')
+        user = db.query(User).get(payload['sub'])
+        # if 'sub' == 0, it means that the token belongs to the role with internal permissions
+        if not user and payload['role_name'] != SUPERUSER_ROLE_NAME:
+            raise JWTException('User does not exist')
+        if 'typ' not in payload or payload['typ'] != 'access':
+            raise JWTException('Token type is not valid')
     except jwt.exceptions.DecodeError or jwt.exceptions.InvalidSignatureError:
         raise JWTException('Bad token format')
     except jwt.exceptions.ExpiredSignatureError:

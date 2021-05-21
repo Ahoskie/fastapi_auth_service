@@ -20,7 +20,7 @@ services:
     env_file:
       - .envs
     ports:
-      - '8000:8000'
+      - '8010:8000'
     volumes:
       - ./backend:/app
     depends_on:

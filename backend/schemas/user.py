@@ -25,8 +25,13 @@ class UserObtainToken(BaseModel):
     password: str
 
 
-class AuthenticationToken(BaseModel):
+class TokenPass(BaseModel):
+    token: str
+
+
+class TokensGet(BaseModel):
     access_token: str
+    refresh_token: str
 
 
 class Settings(BaseModel):
