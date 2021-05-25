@@ -9,7 +9,7 @@ from schemas.user import UserCreate, UserGet, UserObtainToken, TokenPass, UserUp
 from models.user import User
 from models.permissions import Role
 from database.exceptions import DatabaseException, NotFoundException
-from services import check_uniqueness, delete_instance, update_instance
+from services import check_uniqueness, delete_instance, update_instance, get_by_id
 from services.exceptions import JWTException
 from core.config import SECRET_KEY, SUPERUSER_ROLE_NAME
 
@@ -25,6 +25,10 @@ def validate_user(db: Session, user):
 def get_all_users(db: Session, limit: int = 100, offset: int = 0):
     users = db.query(User).offset(offset).limit(limit).all()
     return [user.__dict__ for user in users]
+
+
+def get_user_by_id(db: Session, user_id: int):
+    return get_by_id(db, user_id, User).__dict__
 
 
 def create_user(db: Session, user: UserCreate):

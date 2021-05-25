@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from schemas.user import UserGet, UserCreate, UserObtainToken, TokensGet, TokenPass, UserUpdate
 from services.users import (get_all_users, create_user, delete_user, obtain_token, verify_token, refresh_access_token,
-                            update_user)
+                            update_user, get_user_by_id)
 from database import get_db
 
 
@@ -17,6 +17,11 @@ router = APIRouter(
 @router.get('/', response_model=List[UserGet])
 def list_users(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
     return get_all_users(db, limit, skip)
+
+
+@router.get('/{user_id}/', response_model=UserGet)
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    return get_user_by_id(db, user_id)
 
 
 @router.post('/', response_model=UserGet)
