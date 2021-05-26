@@ -2,13 +2,17 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
+from schemas.permissions import RoleGetExtendedGroups
+
 
 class UserBase(BaseModel):
     name: str
     first_name: Optional[str] = ''
     last_name: Optional[str] = ''
     email: EmailStr
-    role_id: int
+
+    class Config:
+        orm_mode = True
 
 
 class UserCreate(UserBase):
@@ -25,6 +29,7 @@ class UserUpdate(UserBase):
 class UserGet(UserBase):
     id: int
     is_active: bool
+    role: RoleGetExtendedGroups
 
 
 class UserObtainToken(BaseModel):

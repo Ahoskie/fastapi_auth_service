@@ -7,6 +7,9 @@ class RoleBase(BaseModel):
     name: str
     groups: List[int] = []
 
+    class Config:
+        orm_mode = True
+
 
 class RoleGet(RoleBase):
     id: int
@@ -19,11 +22,18 @@ class RoleUpdate(BaseModel):
 
 class GroupBase(BaseModel):
     name: str
-    roles: List[int] = []
+
+    class Config:
+        orm_mode = True
 
 
 class GroupGet(GroupBase):
     id: int
+
+
+class RoleGetExtendedGroups(RoleBase):
+    id: int
+    groups: List[GroupGet]
 
 
 class GroupUpdate(BaseModel):

@@ -6,8 +6,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from schemas.user import UserCreate, UserGet, UserObtainToken, TokenPass, UserUpdate
+from schemas.permissions import RoleGetExtendedGroups
 from models.user import User
-from models.permissions import Role
+from models.permissions import Role, Group
 from database.exceptions import DatabaseException, NotFoundException
 from services import check_uniqueness, delete_instance, update_instance, get_by_id
 from services.exceptions import JWTException
@@ -24,11 +25,11 @@ def validate_user(db: Session, user):
 
 def get_all_users(db: Session, limit: int = 100, offset: int = 0):
     users = db.query(User).offset(offset).limit(limit).all()
-    return [user.__dict__ for user in users]
+    return users
 
 
 def get_user_by_id(db: Session, user_id: int):
-    return get_by_id(db, user_id, User).__dict__
+    return get_by_id(db, user_id, User)
 
 
 def create_user(db: Session, user: UserCreate):
@@ -76,8 +77,7 @@ def create_new_tokens(user):
     decoded_user = {
         'name': user.name,
         'email': user.email,
-        'role_id': user.role_id,
-        'role_name': user.role.name,
+        'role': RoleGetExtendedGroups.from_orm(user.role).dict(),
         'sub': user.id,
         'typ': 'access',
         'exp': datetime.datetime.fromisoformat(access_exp_time.isoformat()).timestamp()
@@ -134,3 +134,4 @@ def verify_token(db: Session, token: TokenPass):
     except jwt.exceptions.ExpiredSignatureError:
         raise JWTException('The token is expired')
     return payload
+

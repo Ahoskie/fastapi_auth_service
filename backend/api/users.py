@@ -1,5 +1,7 @@
+import json
 from typing import List
 from fastapi import APIRouter, HTTPException, Response, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from schemas.user import UserGet, UserCreate, UserObtainToken, TokensGet, TokenPass, UserUpdate
@@ -48,10 +50,10 @@ def obtain_token_by_user_id(user: UserObtainToken, db: Session = Depends(get_db)
     return response_data
 
 
-@router.post('/verify-token/')
+@router.post('/verify-token/', response_model=UserGet)
 def post_verify_token(token: TokenPass, db: Session = Depends(get_db)):
-    verify_token(db, token)
-    return Response(status_code=200)
+    payload = verify_token(db, token)
+    return JSONResponse(payload, status_code=200)
 
 
 @router.post('/refresh-token/', response_model=TokensGet)
