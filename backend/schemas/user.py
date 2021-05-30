@@ -16,6 +16,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
+    role_id: int
     password: str
 
 

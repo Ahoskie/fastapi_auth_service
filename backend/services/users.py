@@ -18,6 +18,7 @@ from core.config import SECRET_KEY, SUPERUSER_ROLE_NAME
 def validate_user(db: Session, user):
     check_uniqueness(db, User, 'name', user.name)
     check_uniqueness(db, User, 'email', user.email)
+    print(user.__dict__)
     db_role = db.query(Role).get(user.role_id)
     if not db_role:
         raise DatabaseException(f'Role with id {user.role_id} does not exist')
@@ -46,7 +47,7 @@ def create_user(db: Session, user: UserCreate):
         db.refresh(db_user)
     except IntegrityError as error:
         raise DatabaseException(error.args)
-    return db_user.__dict__
+    return db_user
 
 
 def delete_user(db: Session, user_id: int):
